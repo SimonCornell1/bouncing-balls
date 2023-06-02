@@ -33,12 +33,20 @@ class Rectangle {
         this.width = width
         this.height = height
         this.colour = colour;
-        this.coordinates = new Position(-1, -1); // negative coords indicates not yet drawn.
+        this.coords = new Position(-1, -1); // negative coords indicates not yet drawn.
+    }
+
+    setPosition(position) {
+        this.coords = position;
+    }
+
+    draw() {
+        drawRect(this.coords, this.width, this.height, this.colour);
     }
 
     drawAt(position) {
-        drawRect(position, this.width, this.height, this.colour);
-        this.coordinates = position
+        this.coords = position;
+        this.draw();
     }
 }
 
@@ -46,17 +54,17 @@ class Circle {
     constructor(radius, colour) {
         this.radius = radius;
         this.colour = colour;
-        this.coordinates = new Position(-1, -1); // negative coords indicates not yet drawn.
+        this.coords = new Position(-1, -1); // negative coords indicates not yet drawn.
     }
 
     drawAt(position) {
         drawCircle(position, this.radius, this.colour);
-        this.coordinates = position
+        this.coords = position
     }
 
     clear() {
         // background is always black for now
-        drawCircle(this.coordinates, this.radius, 'BLACK');
+        drawCircle(this.coords, this.radius, 'BLACK');
     }
 
     moveTo(newPosition) {
@@ -66,25 +74,63 @@ class Circle {
     }
 }
 
-board = new Rectangle(canvas.width, canvas.height, "BLACK");
-board.drawAt(new Position(0, 0));
+
+class Counter {
+    constructor(position, backgroundColour, textColour) {
+        this.coords = position;
+        this.backgroundColour = backgroundColour;
+        this.textColour = textColour
+        this.font = "24px serif";
+        this.counter = 0;
+        this.panel = new Rectangle(70, 30, this.backgroundColour);
+        this.panel.setPosition(new Position(this.coords.x - 5, this.coords.y-25));
+    }
+
+    tick() {
+        this.counter += 1;
+        this.panel.draw();
+    
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'white';
+        ctx.font = this.font; 
+        ctx.fillText(this.counter, this.coords.x, this.coords.y);
+    }
+}
+
+function startUp() {
+    board = new Rectangle(canvas.width, canvas.height, "black");
+    board.drawAt(new Position(0, 0));
+    
+    earth = new Circle(10, "blue");
+    earth.drawAt(new Position(20, 100));
+}
+
+numberTicks = 0;
+counter = new Counter(new Position(10, 30), "red", "white");
+
+function tick() {
+    counter.tick();
+    period = 10; // milli-seconds
+    setTimeout(tick, period);
+}
+
+startUp();
+tick();
 
 
-earth = new Circle(10, "blue");
-earth.drawAt(new Position(20, 100));
 
 
-
+/*
 for (let i = 0; i < 30; i++) {
     setTimeout(function(){ 
-        earth.moveTo(new Position(earth.coordinates.x + i, earth.coordinates.y))
+        earth.moveTo(new Position(earth.coords.x + i, earth.coords.y))
     }, i*50);  
 }
 
 for (let i = 0; i < 30; i++) {
     setTimeout(function(){ 
-        earth.moveTo(new Position(earth.coordinates.x - i, earth.coordinates.y))
+        earth.moveTo(new Position(earth.coords.x - i, earth.coords.y))
     }, 1500 + i*50);  
 }
-
+*/
 //console.log(p.x);
