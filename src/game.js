@@ -7,7 +7,7 @@ class Position {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        Object.freeze(this); 
+        // Object.freeze(this); 
         // object is now read only but warning, we can write code this
         // p = new Position(0,0)
         // p.x = 50;
@@ -15,12 +15,14 @@ class Position {
     }
 }
 
-function drawRect(pos, w, h, colour) {
+function drawRect(pos, width, height, colour) {
+    // pos is the centre of the rectangle
     ctx.fillStyle = colour;
-    ctx.fillRect(pos.x, pos.y, w, h);
+    ctx.fillRect(pos.x - width/2, pos.y - height/2, width, height);
 }
 
 function drawCircle(pos, radius, colour) {
+    // pos is the centre of the circle.
     ctx.fillStyle = colour;
     ctx.beginPath();
     ctx.arc(pos.x, pos.y, radius, 0, 2 * Math.PI, false);
@@ -34,14 +36,30 @@ class Rectangle {
         this.height = height
         this.colour = colour;
         this.coords = new Position(-1, -1); // negative coords indicates not yet drawn.
+        this.velocity = new Velocity(0, 0);
     }
 
     setPosition(position) {
         this.coords = position;
     }
 
+    setVelocity(v) {
+        this.velocity = v;
+    }
+
+    tick() {
+        this.clear();
+        this.coords.x += this.velocity.x;
+        this.coords.y += this.velocity.y;
+        this.draw();
+    }
+
     draw() {
         drawRect(this.coords, this.width, this.height, this.colour);
+    }
+
+    clear() {
+        drawRect(this.coords, this.width, this.height, 'black');
     }
 
     drawAt(position) {
@@ -50,27 +68,59 @@ class Rectangle {
     }
 }
 
+
 class Circle {
     constructor(radius, colour) {
         this.radius = radius;
         this.colour = colour;
         this.coords = new Position(-1, -1); // negative coords indicates not yet drawn.
+        this.velocity = new Velocity(0, 0);
     }
 
-    drawAt(position) {
-        drawCircle(position, this.radius, this.colour);
-        this.coords = position
+    setPosition(position) {
+        this.coords = position;
+    }
+
+    setVelocity(v) {
+        this.velocity = v
+    }
+
+    draw() {
+        drawCircle(this.coords, this.radius, this.colour);
     }
 
     clear() {
         // background is always black for now
-        drawCircle(this.coords, this.radius, 'BLACK');
+        // +1 to workaround a problem with clear not fully working with slow moving circle.
+        drawCircle(this.coords, this.radius + 1, 'BLACK');
     }
+
+    tick() {
+        this.clear();
+        this.coords.x += this.velocity.x;
+        this.coords.y += this.velocity.y;
+        //this.draw();
+    }
+
+    drawAt(position) {
+        this.coords = position
+        this.draw();
+    }
+
+    
 
     moveTo(newPosition) {
         // TODO assert this is drawn
         this.clear();
         this.drawAt(newPosition);
+    }
+}
+
+
+class Velocity {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
     }
 }
 
@@ -83,17 +133,17 @@ class Counter {
         this.font = "24px serif";
         this.counter = 0;
         this.panel = new Rectangle(70, 30, this.backgroundColour);
-        this.panel.setPosition(new Position(this.coords.x - 5, this.coords.y-25));
+        this.panel.setPosition(new Position(this.coords.x, this.coords.y));
     }
 
     tick() {
         this.counter += 1;
         this.panel.draw();
     
-        ctx.fillStyle = 'white';
-        ctx.strokeStyle = 'white';
+        ctx.fillStyle = this.textColour;
+        ctx.strokeStyle = this.textColour;
         ctx.font = this.font; 
-        ctx.fillText(this.counter, this.coords.x, this.coords.y);
+        ctx.fillText(this.counter, this.coords.x - 32, this.coords.y + 7);
     }
 }
 
@@ -101,22 +151,50 @@ function startUp() {
     board = new Rectangle(canvas.width, canvas.height, "black");
     board.drawAt(new Position(0, 0));
     
-    earth = new Circle(10, "blue");
-    earth.drawAt(new Position(20, 100));
+    //earth = new Rectangle(30, 30, "blue");
+    //earth.setVelocity(new Velocity(1,0));
+    //earth.drawAt(new Position(20, 100));
+
+    mars = new Circle(10, "red");
+    mars.setVelocity(new Velocity(0,0));
+    mars.drawAt(new Position(20, 60));
+/*
+    mercury = new Circle(5, "yellow");
+    mercury.setVelocity(new Velocity(1,0));
+    mercury.drawAt(new Position(20, 90));
+
+*/
+
+    //box = new Rectangle(100, 100, 'yellow');
+    //box.drawAt(new Position(200,200));
+
+    //ball = new Circle(50, "white");
+    //ball.drawAt(new Position(200,200));
+
+
+    //ball = new Circle(40, "black");
+    //ball.drawAt(new Position(200,200));
 }
 
-numberTicks = 0;
-counter = new Counter(new Position(10, 30), "red", "white");
+counter = new Counter(new Position(40, 30), "red", "white");
+
+function MarsTick() {
+    mars.tick();
+}
+
 
 function tick() {
     counter.tick();
-    period = 10; // milli-seconds
+    period = 100; // milli-seconds
+
+    //earth.tick();
+    setTimeout(MarsTick,   5000);
+  //  mercury.tick();
     setTimeout(tick, period);
 }
 
 startUp();
 tick();
-
 
 
 
